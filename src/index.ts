@@ -21,13 +21,27 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
 		const path = url.pathname;
-		const redirect = !['false', 'no'].includes(url.searchParams.get('redirect') || '')
+		let redirect = !['false', 'no'].includes(url.searchParams.get('redirect') || '');
+		// Redirect unless the request is coming from Telegram
+		const referer = request.headers.get('Referer') || '';
+		if (!referer.toLowerCase().includes('https://t.me')) {
+			redirect = false;
+		}
 
 		if (path === '/') {
 			return Response.redirect(GITHUB_REPO, 302);
 		}
 
-		let match = path.match(/^\/question\/\d+\/answer\/(\d+)\/?$/);
+		if (path === '/robots.txt') {
+			return new Response(`User-agent: *
+Disallow: /
+Allow: /question/*
+Allow: /p/*
+Allow: /answer/*
+`);
+		}
+
+		let match = path.match(/^(?:\/question\/\d+)?\/answer\/(\d+)\/?$/);
 		if (match) {
 			const answerId = match[1];
 			return new Response(await answer(answerId, redirect, env), {

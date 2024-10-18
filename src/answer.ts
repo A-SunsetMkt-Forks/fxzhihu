@@ -2,15 +2,18 @@ import { Question } from "./question";
 import { fixImagesAndLinks, renderTemplate } from "./lib";
 
 export type Answer = {
-    content: string;
-    excerpt: string;
-    author: {
-        name: string;
-    };
-    voteup_count: number;
-    comment_count: number;
-    question: Question;
-    created_time: number;
+	content: string;
+	excerpt: string;
+	author: {
+		name: string;
+		url: string;
+		headline: string;
+		avatar_url: string;
+	};
+	voteup_count: number;
+	comment_count: number;
+	question: Question;
+	created_time: number;
 }
 
 const template = renderTemplate`
@@ -44,8 +47,11 @@ const template = renderTemplate`
 </head>
 <body style="max-width: 1000px; margin: 0 auto; padding: 0 1em 0 1em;">
     <header>
-        <h1>${"title"}</h1>
-        <h2 rel="author">@${"author"}</h2>
+        <h1><a href="${"url"}">${"title"}</a></h1>
+        <h2 rel="author">
+		<a href="${"author_url"}" target="_blank">@${"author"}</a>
+		</h2>
+		<p> ${"headline"} </p>
         <time datetime="${"created_time"}">发表于 ${"created_time_formatted"}</time>
         <p rel="stats"style="color: #999; font-size: 0.9em;">${"voteup_count"} 👍 / ${"comment_count"} 💬</p>
     </header>
@@ -85,5 +91,8 @@ export async function answer(id: string, redirect: boolean, env: Env): Promise<s
 			question: fixImagesAndLinks(data.question.detail),
 		}) : '',
 		redirect: redirect ? 'true' : 'false',
+		author_url: data.author.url.replace("api.", ""),
+		headline: data.author.headline,
+		avatar_url: data.author.avatar_url,
 	});
 }
